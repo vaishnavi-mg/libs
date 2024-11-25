@@ -1,0 +1,221 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
+const app = express();
+app.use(bodyParser.json());
+app.use(cors());
+
+// MongoDB connection (Use MongoDB Compass to get the connection URI)
+mongoose.connect('mongodb://localhost:27017/eventDB', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(err => console.log(err));
+
+// Event Schema
+const eventSchema = new mongoose.Schema({
+  name: String,
+  date: Date,
+  description: String
+});
+
+const Event = mongoose.model('Event', eventSchema);
+
+// Routes
+app.get('/events', (req, res) => {
+  Event.find()
+    .then(events => res.json(events))
+    .catch(err => res.status(500).send(err));
+});
+
+app.post('/events', (req, res) => {
+  const newEvent = new Event(req.body);
+  newEvent.save()
+    .then(event => res.json(event))
+    .catch(err => res.status(500).send(err));
+});
+
+// Start the server
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management</title>
+    <script src="https://code.angularjs.org/1.8.2/angular.min.js"></script>
+    <script src="script.js"></script>
+</head>
+<body ng-app="eventApp" ng-controller="eventController">
+    <h1>Event Management</h1>
+
+    <form ng-submit="addEvent()">
+        <label for="name">Event Name</label>
+        <input type="text" id="name" ng-model="newEvent.name" required><br>
+
+        <label for="date">Event Date</label>
+        <input type="date" id="date" ng-model="newEvent.date" required><br>
+
+        <label for="description">Event Description</label>
+        <textarea id="description" ng-model="newEvent.description" required></textarea><br>
+
+        <button type="submit">Add Event</button>
+    </form>
+
+    <h2>Event List</h2>
+    <ul>
+        <li ng-repeat="event in events">
+            {{ event.name }} ({{ event.date | date:'short' }}) - {{ event.description }}
+        </li>
+    </ul>
+</body>
+</html>
+
+
+var app = angular.module('eventApp', []);
+
+app.controller('eventController', function($scope, $http) {
+    // Get events from the backend
+    $http.get('http://localhost:3000/events')
+        .then(function(response) {
+            $scope.events = response.data;
+        });
+
+    // Add a new event
+    $scope.addEvent = function() {
+        var eventData = $scope.newEvent;
+        $http.post('http://localhost:3000/events', eventData)
+            .then(function(response) {
+                $scope.events.push(response.data);  // Add new event to the list
+                $scope.newEvent = {};  // Reset form
+            });
+    };
+});
+
+CREATE DATABASE eventDB;
+USE eventDB;
+
+CREATE TABLE events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  date DATE,
+  description TEXT
+);
+INSERT INTO events (name, date, description) VALUES ('Music Concert', '2024-12-10', 'A grand music concert.');
+INSERT INTO events (name, date, description) VALUES ('Tech Talk', '2024-11-30', 'An informative tech talk for beginners.');
+
+npm install mysql2
+
+// server.js
+
+const express = require('express');
+const mysql = require('mysql2');
+
+// Create a connection to the MySQL database
+const connection = mysql.createConnection({
+  host: 'localhost',   // Change to your MySQL host, for cloud it would be different.
+  user: 'root',        // Your MySQL username
+  password: 'yourpassword', // Your MySQL password
+  database: 'eventDB'  // The database name you created
+});
+
+// Connect to the MySQL server
+connection.connect((err) => {
+  if (err) {
+    console.error('Error connecting to the MySQL database:', err.stack);
+    return;
+  }
+  console.log('Connected to MySQL database');
+});
+
+const app = express();
+app.use(express.json());
+
+// API endpoint to get all events
+app.get('/events', (req, res) => {
+  connection.query('SELECT * FROM events', (err, results) => {
+    if (err) {
+      res.status(500).json({ message: 'Error retrieving events' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+// API endpoint to add a new event
+app.post('/events', (req, res) => {
+  const { name, date, description } = req.body;
+  const query = 'INSERT INTO events (name, date, description) VALUES (?, ?, ?)';
+  connection.query(query, [name, date, description], (err, results) => {
+    if (err) {
+      res.status(500).json({ message: 'Error adding event' });
+    } else {
+      res.status(201).json({ id: results.insertId, name, date, description });
+    }
+  });
+});
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+<!DOCTYPE html>
+<html lang="en" ng-app="eventApp">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Management</title>
+</head>
+<body ng-controller="EventController">
+  <h1>Event Management</h1>
+  
+  <form ng-submit="addEvent()">
+    <input type="text" ng-model="newEvent.name" placeholder="Event Name" required />
+    <input type="date" ng-model="newEvent.date" placeholder="Event Date" required />
+    <textarea ng-model="newEvent.description" placeholder="Event Description" required></textarea>
+    <button type="submit">Add Event</button>
+  </form>
+
+  <h2>Events</h2>
+  <ul>
+    <li ng-repeat="event in events">
+      <strong>{{event.name}}</strong> - {{event.date}}<br>
+      <p>{{event.description}}</p>
+    </li>
+  </ul>
+
+  <script>
+    angular.module('eventApp', [])
+      .controller('EventController', function($scope, $http) {
+        // Fetch all events
+        $http.get('http://localhost:3000/events')
+          .then(function(response) {
+            $scope.events = response.data;
+          });
+
+        // Add a new event
+        $scope.addEvent = function() {
+          const newEvent = $scope.newEvent;
+          $http.post('http://localhost:3000/events', newEvent)
+            .then(function(response) {
+              $scope.events.push(response.data);
+              $scope.newEvent = {};  // Clear form after submission
+            })
+            .catch(function(error) {
+              console.error('Error adding event:', error);
+            });
+        };
+      });
+  </script>
+</body>
+</html>
+

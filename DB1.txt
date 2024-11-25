@@ -1,0 +1,126 @@
+CREATE DATABASE inventoryDB;
+
+USE inventoryDB;
+
+CREATE TABLE items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    quantity INT NOT NULL,
+    category VARCHAR(50) NOT NULL
+);
+npm init -y
+npm install express mysql body-parser cors
+
+server.js
+const express = require('express');
+const mysql = require('mysql');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
+const app = express();
+const PORT = 3000;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// MySQL Connection
+const db = mysql.createConnection({
+    host: 'localhost', // Change if your MySQL is hosted elsewhere
+    user: 'your_username', // Replace with your MySQL username
+    password: 'your_password', // Replace with your MySQL password
+    database: 'inventoryDB' // Your database name
+});
+
+db.connect(err => {
+    if (err) {
+        console.error('Database connection failed:', err.stack);
+        return;
+    }
+    console.log('Connected to MySQL database');
+});
+
+// API to add an item
+app.post('/api/items', (req, res) => {
+    const { name, quantity, category } = req.body;
+    const query = 'INSERT INTO items (name, quantity, category) VALUES (?, ?, ?)';
+    db.query(query, [name, quantity, category], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to add item' });
+        }
+        res.status(201).json({ id: result.insertId, name, quantity, category });
+    });
+});
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+<!DOCTYPE html>
+<html lang="en" ng-app="Inapp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.js"></script>
+    <title>Inventory Management</title>
+    <style>
+        .animateitems {
+            transition: all 0.5s ease;
+        }
+        .ng-enter {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        .ng-enter-activate {
+            opacity: 1;
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body ng-controller="Incont">
+    <h1>Inventory Management</h1>
+    <form ng-submit="additem()">
+        <input type="text" ng-model="newItem.name" placeholder="Item" required>
+        <input type="number" ng-model="newItem.quantity" placeholder="Item quantity" required>
+        <select ng-model="newItem.category" required>
+            <option value="grocery">Grocery</option>
+            <option value="mobile">Mobile</option>
+            <option value="laptop">Laptop</option>
+        </select>
+        <button type="submit">ADD ITEM</button>
+    </form>
+
+    <input type="text" ng-model="categoryfilter" placeholder="Category">
+
+    <ul>
+        <li ng-repeat="item in items | filter:{category:categoryfilter}" class="animateitems">
+            {{item.name}} ({{item.quantity}}) - {{item.category}}
+        </li>
+    </ul>
+
+    <script>
+        var app = angular.module('Inapp', ['ngAnimate']);
+
+        app.service('Inse', function($http) {
+            this.additem = function(item) {
+                return $http.post('http://localhost:3000/api/items', item);
+            };
+        });
+
+        app.controller('Incont', function($scope, Inse) {
+            $scope.items = []; // Start with an empty array
+
+            $scope.additem = function() {
+                Inse.additem($scope.newItem).then(function(response) {
+                    $scope.items.push(response.data); // Add new item to the list
+                    $scope.newItem = {}; // Clear form inputs
+                }).catch(function(error) {
+                    console.error('Error adding item:', error);
+                });
+            };
+        });
+    </script>
+</body>
+</html>

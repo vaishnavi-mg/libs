@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Viewport Meta Tag -->
+    <title>XML Integration Example</title>
+    <script>
+        function loadXMLDoc() {
+            // Using Fetch API to load the XML file
+            fetch('data.xml')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.text();
+                })
+                .then(str => {
+                    // Parse the XML string into a DOM object
+                    const parser = new DOMParser();
+                    const xml = parser.parseFromString(str, "text/xml");
+                    displayData(xml);
+                })
+                .catch(error => console.error('Error fetching XML:', error));
+        }
+
+        function displayData(xml) {
+            const items = xml.getElementsByTagName('item');
+            const output = document.getElementById('output');
+            output.innerHTML = ''; // Clear previous data
+
+            for (let i = 0; i < items.length; i++) {
+                const name = items[i].getElementsByTagName('name')[0].textContent;
+                const price = items[i].getElementsByTagName('price')[0].textContent;
+
+                // Create a new list item for each item
+                const li = document.createElement('li');
+                li.textContent = `${name}: $${price}`;
+                output.appendChild(li);
+            }
+        }
+    </script>
+</head>
+<body onload="loadXMLDoc()">
+    <h1>Inventory</h1>
+    <ul id="output">
+        <!-- XML data will be loaded here -->
+    </ul>
+</html>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE inventory [
+<!ELEMENT inventory (item+)>
+<!ELEMENT item (name,price,quantity,supplier)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT price (#PCDATA)>
+<!ELEMENT quantity (#PCDATA)>
+<!ELEMENT supplier (name,contact)>
+<!ELEMENT contact (#PCDATA)>
+]>
+<inventory>
+    <item>
+        <name>Widget</name>
+        <price>19.99</price>
+        <quantity>100</quantity>
+        <supplier>
+            <name>Supplier A</name>
+            <contact>contact@suppliera.com</contact>
+        </supplier>
+    </item>
+    <item>
+        <name>Gadget</name>
+        <price>29.99</price>
+        <quantity>50</quantity>
+        <supplier>
+            <name>Supplier B</name>
+            <contact>contact@supplierb.com</contact>
+        </supplier>
+    </item>
+</inventory>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<inventory xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceLocation="inventory.xsd">
+    <item>
+        <name>Rice</name>
+        <quantity>2</quantity>
+        <supplier>
+            <name>hari</name>
+            <phone>9345467243</phone>
+        </supplier>
+    </item>
+</inventory>
+
+
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:complexType name="suppliertype">
+        <xs:sequence>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="phone" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="inventory">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="item">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="name" type="xs:string" />
+                            <xs:element name="quantity" type="xs:decimal"/>
+                            <xs:element name="supplier" type="suppliertype"/>
+                        </xs:sequence>
+                    </xs:complexType>
+         
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
