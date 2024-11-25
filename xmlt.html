@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bookstore</title>
+</head>
+<body>
+    <h2>Bookstore</h2>
+    <table border="1">
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Price</th>
+        </tr>
+        <tbody id="bookTable"></tbody>
+    </table>
+
+    <script>
+        const xmlData = `
+        <bookstore>
+            <book>
+                <title>The Great Gatsby</title>
+                <author>F. Scott Fitzgerald</author>
+                <price>10.99</price>
+            </book>
+            <book>
+                <title>To Kill a Mockingbird</title>
+                <author>Harper Lee</author>
+                <price>7.99</price>
+            </book>
+        </bookstore>`;
+
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlData, "text/xml");
+
+        const books = xmlDoc.getElementsByTagName("book");
+        let tableContent = '';
+
+        for (let book of books) {
+            tableContent += `<tr>
+                <td>${book.getElementsByTagName("title")[0].textContent}</td>
+                <td>${book.getElementsByTagName("author")[0].textContent}</td>
+                <td>${book.getElementsByTagName("price")[0].textContent}</td>
+            </tr>`;
+        }
+
+        document.getElementById("bookTable").innerHTML = tableContent;
+    </script>
+</body>
+</html>

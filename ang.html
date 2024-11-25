@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html ng-app="eventApp">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.js"></script>
+        <style>
+            .ng-enter {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            .ng-enter-active {
+                opacity: 1;
+                transform: scale(1.0);
+                transition: all 0.5s ease;
+            }
+        </style>
+    </head>
+    <body ng-controller="eventController">
+        <h1>Event Management Dashboard</h1>
+
+        <!-- Add Event Form -->
+        <form ng-submit="addEvent()">
+            <input type="text" ng-model="newEvent.name" placeholder="Event Name" required />
+            <input type="date" ng-model="newEvent.date" required />
+            <select ng-model="newEvent.category" required>
+                <option value="conference">Conference</option>
+                <option value="workshop">Workshop</option>
+                <option value="meetup">Meetup</option>
+                <option value="seminar">Seminar</option>
+            </select>
+            <button type="submit">Add Event</button>
+        </form>
+
+        <!-- Filters -->
+        <input type="text" ng-model="categoryFilter" placeholder="Filter by Category" />
+        <input type="date" ng-model="dateFilter" placeholder="Filter by Date" />
+
+        <!-- Event List -->
+        <h2>All Events:</h2>
+        <ul>
+            <li ng-repeat="event in events | filter: { category: categoryFilter } | filter: filterByDate" class="ng-enter">
+                {{ event.name }} - {{ event.date | date:'yyyy-MM-dd' }} ({{ event.category }})
+            </li>
+        </ul>
+
+        <script>
+            // Define AngularJS App Module
+            var app = angular.module("eventApp", ["ngAnimate"]);
+
+            // Factory for Event Management
+            app.factory("eventFactory", function () {
+                let events = [
+                    { name: "Tech Conference", date: "2024-12-01", category: "conference" },
+                    { name: "Angular Workshop", date: "2024-12-10", category: "workshop" },
+                ];
+
+                return {
+                    getEvents: function () {
+                        return events;
+                    },
+                    addEvent: function (newEvent) {
+                        events.push(newEvent);
+                    },
+                };
+            });
+
+            // Service to Interact with Factory
+            app.service("eventService", function (eventFactory) {
+                this.getEvents = function () {
+                    return eventFactory.getEvents();
+                };
+                this.addEvent = function (event) {
+                    eventFactory.addEvent(event);
+                };
+            });
+
+            // Controller to Handle Scope and Logic
+            app.controller("eventController", function ($scope, eventService) {
+                $scope.events = eventService.getEvents();
+                $scope.newEvent = {};
+
+                // Add Event with Alert Message
+                $scope.addEvent = function () {
+                    eventService.addEvent($scope.newEvent);
+                    alert("Event added successfully!");
+                    $scope.newEvent = {};
+                };
+
+                // Custom Filter for Date
+                $scope.filterByDate = function (event) {
+                    if (!$scope.dateFilter) return true;
+                    return event.date === $scope.dateFilter;
+                };
+            });
+        </script>
+    </body>
+</html>

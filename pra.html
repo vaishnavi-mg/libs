@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <h1>Bookstore</h1>
+        <table border="1">
+            <tr>
+                <th>Title</th>
+                <th>Price</th>
+            </tr>
+            <tbody id="booktable"></tbody>
+        </table>
+        <script>
+            let xmlData = `
+            <bookstore>
+                <book> 
+                    <title>Harry Potter 1</title>
+                    <price>130</price>
+                </book>
+                <book> 
+                    <title>Harry Potter 2</title>
+                    <price>160</price>
+                </book>
+            </bookstore>`;
+
+            const parser = new DOMParser();
+            const xmldoc = parser.parseFromString(xmlData, "text/xml");
+            const books = xmldoc.getElementsByTagName("book");
+            let tablecontents = '';
+
+            for (let book of books) {
+                tablecontents += `
+                <tr>
+                    <td>${book.getElementsByTagName("title")[0].textContent}</td>
+                    <td>${book.getElementsByTagName("price")[0].textContent}</td>
+                </tr>`;
+            }
+
+            document.getElementById("booktable").innerHTML = tablecontents; // Corrected method name
+        </script>
+    </body>
+</html>
